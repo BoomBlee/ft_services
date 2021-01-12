@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-svc
+  labels:
+    app: php
+  annotations:
+    metallb.universe.tf/allow-shared-ip: minikube
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.99.165
+  ports:
+    - name: php-port
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: php
+    tier: mysql
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: php-deployment
+  labels:
+    app: php
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: php
+        tier: mysql
+    spec:
+      containers:
+      - image: php_image
+        name: php
+        ports:
+        - containerPort: 5000
+        imagePullPolicy: Never
